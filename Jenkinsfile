@@ -11,9 +11,10 @@ pipeline {
                 echo 'Logging Into the Private ECR Registry'
                 script {
                     GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                    ACCOUNT_REGISTRY_PREFIX = "36197227464.dkr.ecr.us-east-1.amazonaws.com"
+                    ACCOUNT_REGISTRY_PREFIX = "036197227464.dkr.ecr.us-east-1.amazonaws.com"
                     sh """
-                       \$(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 036197227464.dkr.ecr.us-east-1.amazonaws.com)
+                       aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 036197227464.dkr.ecr.us-east-1.amazonaws.com > ./login
+                       source ./login
                     """                    
                 }
             }
