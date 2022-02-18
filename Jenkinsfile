@@ -28,7 +28,7 @@ pipeline {
                 echo 'Starting to build the project builder docker image'
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
+                        builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f Dockerfile.builder .")
                         sh """
                            echo $PASS | docker login -u $USER --password-stdin
                         """
