@@ -10,12 +10,12 @@ pipeline {
             environment {
                 AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
                 AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
+                GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+                ACCOUNT_REGISTRY_PREFIX = "036197227464.dkr.ecr.us-east-1.amazonaws.com"
             }
             steps {
                 echo 'Logging Into the Private ECR Registry'
                 script {
-                    GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                    ACCOUNT_REGISTRY_PREFIX = "036197227464.dkr.ecr.us-east-1.amazonaws.com"
                     sh """
                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 036197227464.dkr.ecr.us-east-1.amazonaws.com
                     """                    
@@ -27,14 +27,19 @@ pipeline {
             steps {
                 echo 'Starting to build the project builder docker image'
                 script {
-                    builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
-                    builderImage.push()
-                    builderImage.push("${env.GIT_BRANCH}")
-                    builderImage.inside('-v $WORKSPACE:/output -u root') {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
                         sh """
-                           cd /output
-                           lein uberjar
+                           echo $PASS | docker login -u $USER --password-stdin ${ACCOUNT_REGISTRY_PREFIX}
                         """
+                        builderImage.push()
+                        builderImage.push("${env.GIT_BRANCH}")
+                        builderImage.inside('-v $WORKSPACE:/output -u root') {
+                            sh """
+                               cd /output
+                               lein uberjar
+                            """
+                            }
                     }
                 }
             }
