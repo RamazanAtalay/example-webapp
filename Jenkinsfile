@@ -30,16 +30,16 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                         builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
                         sh """
-                           echo $PASS | docker login -u $USER --password-stdin ${ACCOUNT_REGISTRY_PREFIX}
+                           echo $PASS | docker login -u $USER --password-stdin
                         """
-                        builderImage.push()
-                        builderImage.push("${env.GIT_BRANCH}")
-                        builderImage.inside('-v $WORKSPACE:/output -u root') {
-                            sh """
-                               cd /output
-                               lein uberjar
-                            """
-                            }
+                        // builderImage.push()
+                        // builderImage.push("${env.GIT_BRANCH}")
+                        // builderImage.inside('-v $WORKSPACE:/output -u root') {
+                        //     sh """
+                        //        cd /output
+                        //        lein uberjar
+                        //     """
+                        //     }
                     }
                 }
             }
